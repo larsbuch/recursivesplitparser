@@ -1,0 +1,38 @@
+#Structure start with root
+root := context new-line-literal dataflow*
+context := name-literal
+dataflow := input-component whitespace pipeline whitespace non-input-components new-line-literal
+#input-component can specify a subflow from existing defined component with new outport-name
+input-component := component-type instance-splitter-literal instance-name whitespace outport-name
+component-type := name-literal
+instance-name := name-literal
+outport-name := uppercase-name-literal (optional-sorted-pipeline-columns)? #without sortdirection ignores sorting
+pipeline := pipeline-literal (whitespace parenthesis-start pipeline-name parenthesis-end )?
+optional-sorted-pipeline-columns := whitespace parenthesis-start sorted-pipeline-columns parenthesis-end
+sorted-pipeline-columns := sorted-pipeline-column ( whitespace comma-literal whitespace? sorted-pipeline-column whitespace )*
+sorted-pipeline-column := pipeline-column (whitespace pipeline-column-sortdirection)?
+pipeline-column := pipeline-column-name (column-splitter-literal pipeline-column-name)*
+pipeline-column-name := name-literal
+pipeline-column-sortdirection := ascending-literal | descending-literal
+pipeline-name := name-literal
+non-input-components := ( pipeline whitespace transform-component whitespace )* pipeline whitespace output-component
+transform-component := inport-name whitespace component-type instance-splitter-literal instance-name whitespace outport-name
+#output-component can specify an end of a subflow from existing defined component with new inport-name
+output-component := inport-name whitespace component-type instance-splitter-literal instance-name
+inport-name := uppercase-name-literal (optional-sorted-pipeline-columns)? #without sortdirection ignores sorting
+whitespace := whitespace-literal+
+parenthesis-start := parenthesis-start-literal whitespace?
+parenthesis-end := whitespace? parenthesis-end-literal
+#Literals:
+whitespace-literal := ‘ ‘ #space
+new-line-literal := ‘CRLF’
+instance-splitter-literal := ‘.’
+parenthesis-start-literal := ‘(‘
+parenthesis-end-literal := ‘)‘
+pipeline-literal := ‘->’
+name-literal := todo
+uppercase-name-literal := todo
+column-splitter-literal := ‘.’ # splits the different hierarchy numbers
+ascending-literal := ‘ASC’
+descending-literal := ‘DESC’
+comma-literal := ‘,’

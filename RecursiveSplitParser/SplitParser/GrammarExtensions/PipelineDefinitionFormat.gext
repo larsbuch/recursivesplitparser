@@ -1,0 +1,70 @@
+# message is the highest level of Cap’n’Proto schema
+message := file-id end-statement whitespace? members-without-union+
+file-id := file-id-literal file-hexcode-literal
+struct-member := struct-literal whitespace struct-name whitespace { members }
+struct-name : scoped-literal
+members-without-union := ( struct-member | field-member | enumeration | comment | constant )+ 
+members := ( struct-member | field-member | enumeration | union | group | comment | constant )+ 
+group := group-name whitespace group-literal { members }
+constant := constant-literal whitespace constant-name field-type-start-literal field-type field-default end-statement
+constant-name := scoped-literal
+union := (union-name whitespace field-type-start-literal )? union-literal whitespace? { members } 
+field-member := field-member-name whitespace field-number whitespace field-type-start-literal field-type field-default? end-statement
+field-member-name := scoped-literal
+field-type := void-type-literal | boolean-type-literal | integer-type-literal | unsigned-integer-type-literal | floating-point-type-literal | blob-type-literal | list-type | import-type | nested-object-type
+import-type := import-type-literal whitespace “ filename-literal “ nested-object-type # effect should be to load and process file before continued processing
+nested-object-type := (nested-object-type object-splitter-literal)* object-type
+object-type := struct-name | const-name # existing struct-name
+enumeration := enum-literal whitespace enum-name whitespace? { enum-members }
+list-type := list-literal whitespace? ( field-type )
+enum-members := enum-member-name whitespace field-number field-modifier? end-statement
+# field-default has default-value that are context dependent with switching based on field-default-literal
+field-default := whitespace field-default-literal whitespace default-value end-statement
+default-value := todo
+field-number := field-number-literal integer-literal
+field-modifier := whitespace field-modifier-literal
+end-statement := whitespace? end-statement-literal
+comment := comment-literal anything-except-EOL EOL
+enum-name := scoped-literal
+enum-member-name := scoped-literal
+whitespace := whitespace-literal+
+union-name := scoped-literal
+group-name := scoped-literal
+
+#Literal
+field-type-start-literal := ‘:’
+filename-literal := todo
+struct-literal := ‘struct’
+group-literal := ‘group’
+field-default-literal := ‘=’
+void-type-literal := ‘Void’ 
+import-type-literal := ‘import’
+boolean-type-literal :=  ’Bool’ 
+integer-type-literal := ‘Int8’ | ‘Int16’ | ‘Int32’ | ‘Int64’ 
+unsigned-integer-type-literal := ‘UInt8’ | ‘UInt16’ | ‘UInt32’ | ‘UInt64’
+floating-point-type-literal := ‘Float32’ | ‘Float64’
+blob-type-literal := ‘Text’ | ‘Data’
+file-id-literal := ‘@’
+file-hexcode-literal := todo (64-bit code as hex where first is always 1)
+field-number-literal := ‘@’
+field-modifier-literal := ‘deleted’
+integer-literal := todo (positive-integer)
+end-statement-literal := ‘;’
+anything-except-EOL := [^\n]
+EOL := \n
+enum-literal := ’enum’
+union-literal := ‘union’
+whitespace-literal := ’ ’ #space
+list-literal := ‘List’
+object-splitter-literal := ‘.’
+scoped-literal := todo (unique in scope when defined and not reserved names)
+constant-literal := ‘const’
+comment-literal := ‘#’
+
+
+# not defined are:
+# interfaces RPC thus not implemented
+# generic types not implemented by design
+# generic methods RPC thus not implemented
+# annotations not implemented by design
+# alias not implemented by design
