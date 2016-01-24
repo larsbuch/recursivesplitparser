@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 using RecursiveSplitParser;
+using System.Collections.ObjectModel;
 
 namespace StepLexer.UnitTests
 {
@@ -13,14 +14,12 @@ namespace StepLexer.UnitTests
         [Theory, StepLexerTestConvensions]
         public void CreateInstance_SetEmptyTerminalsThrowsException()
         {
-            List<Terminal> terminals = new List<Terminal>();
-
             Exception expected = new Exception(StepLexerResources.TerminalListEmpty);
             Exception actual = null;
 
             try
             {
-                StepLexer sut = new StepLexer(terminals);
+                StepLexer sut = new StepLexer(new ObservableCollection<Terminal>(), new ObservableCollection<string>(), new StepLexerOptions());
             }
             catch (Exception ex)
             {
@@ -37,7 +36,7 @@ namespace StepLexer.UnitTests
 
             try
             {
-                StepLexer sut = new StepLexer(GetTestTerminalList());
+                StepLexer sut = new StepLexer(GetTestTerminalList(), new ObservableCollection<string>(), new StepLexerOptions());
             }
             catch (Exception ex)
             {
@@ -54,8 +53,7 @@ namespace StepLexer.UnitTests
 
             try
             {
-                StepLexer sut = new StepLexer(GetTestTerminalList());
-                sut.SetSourceLine(GetSingleTextLine());
+                StepLexer sut = new StepLexer(GetTestTerminalList(), GetSingleTextLine(), new StepLexerOptions());
             }
             catch (Exception ex)
             {
@@ -67,8 +65,7 @@ namespace StepLexer.UnitTests
         [Theory, StepLexerTestConvensions]
         public void NextToken_ReturnsCorrectListOfTokens()
         {
-            StepLexer sut = new StepLexer(GetTestTerminalList());
-            sut.SetSourceLine(GetSingleTextLine());
+            StepLexer sut = new StepLexer(GetTestTerminalList(), GetSingleTextLine(), new StepLexerOptions());
             Token token = sut.NextToken();
             Assert.Equal("BOF", token.Terminal);
             token = sut.NextToken();
@@ -90,8 +87,7 @@ namespace StepLexer.UnitTests
         [Theory, StepLexerTestConvensions]
         public void NextToken_ReturnsCorrectListOfTokensWithSpaceWithoutIgnore()
         {
-            StepLexer sut = new StepLexer(GetTestTerminalListWithSpace());
-            sut.SetSourceLine(GetSingleTextLine());
+            StepLexer sut = new StepLexer(GetTestTerminalListWithSpace(), GetSingleTextLine(), new StepLexerOptions());
             Token token = sut.NextToken();
             Assert.Equal("BOF", token.Terminal);
             token = sut.NextToken();
@@ -121,65 +117,11 @@ namespace StepLexer.UnitTests
             Assert.Equal("EOF", token.Terminal);
         }
 
-        [Theory, StepLexerTestConvensions]
-        public void SetSourceLine_EmptyStringThrowsNoException()
-        {
-            Exception expected = null;
-            Exception actual = null;
-
-            try
-            {
-                StepLexer sut = new StepLexer(GetTestTerminalList());
-                sut.SetSourceLine(string.Empty);
-            }
-            catch (Exception ex)
-            {
-                actual = ex;
-            }
-            Assert.Equal(expected, actual);
-        }
-
-        [Theory, StepLexerTestConvensions]
-        public void SetSourceLines_ThrowsNoException()
-        {
-            Exception expected = null;
-            Exception actual = null;
-
-            try
-            {
-                StepLexer sut = new StepLexer(GetTestTerminalList());
-                sut.SetSourceLines(GetMultiTextLines());
-            }
-            catch (Exception ex)
-            {
-                actual = ex;
-            }
-            Assert.Equal(expected, actual);
-        }
-
-        [Theory, StepLexerTestConvensions]
-        public void SetSourceLines_EmptyListThrowsNoException()
-        {
-            Exception expected = null;
-            Exception actual = null;
-
-            try
-            {
-                StepLexer sut = new StepLexer(GetTestTerminalList());
-                sut.SetSourceLines(new List<string>());
-            }
-            catch (Exception ex)
-            {
-                actual = ex;
-            }
-            Assert.Equal(expected, actual);
-
-        }
 
         #region HelperFunctions
-        private List<Terminal> GetTestTerminalList()
+        private ObservableCollection<Terminal> GetTestTerminalList()
         {
-            List<Terminal> terminals = new List<Terminal>();
+            ObservableCollection<Terminal> terminals = new ObservableCollection<Terminal>();
             // space match (and ignore in token list)
             terminals.Add(new Terminal("SPACE", " ", true));
             // Lars match
@@ -191,9 +133,9 @@ namespace StepLexer.UnitTests
             return terminals;
         }
 
-        private List<Terminal> GetTestTerminalListWithSpace()
+        private ObservableCollection<Terminal> GetTestTerminalListWithSpace()
         {
-            List<Terminal> terminals = new List<Terminal>();
+            ObservableCollection<Terminal> terminals = new ObservableCollection<Terminal>();
             // space match (and ignore in token list)
             terminals.Add(new Terminal("SPACE", " ", false));
             // Lars match
@@ -205,20 +147,24 @@ namespace StepLexer.UnitTests
             return terminals;
         }
 
-        private string GetSingleTextLine()
+        private ObservableCollection<string> GetSingleTextLine()
         {
-            return " Lars gik en tur";
+            ObservableCollection<string> sourceLines = new ObservableCollection<string>()
+            {
+                " Lars gik en tur"
+            };
+            return sourceLines;
         }
 
-        private List<string> GetMultiTextLines()
+    private ObservableCollection<string> GetMultiTextLines()
         {
-            List<string> textLines = new List<string>()
+            ObservableCollection<string> sourceLines = new ObservableCollection<string>()
             {
                 "Lars og Rita gik en tur.",
                 "De så en isbjørn",
                 "Senere kørte de hjem"
             };
-            return textLines;
+            return sourceLines;
         }
         #endregion
     }

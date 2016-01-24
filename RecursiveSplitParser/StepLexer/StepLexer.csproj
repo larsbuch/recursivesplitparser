@@ -46,12 +46,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CheckNextTokenEventArgs.cs" />
+    <Compile Include="IStepLexer.cs" />
+    <Compile Include="LexerPath.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StepLexer.cs" />
+    <Compile Include="StepLexerException.cs" />
+    <Compile Include="StepLexerOptions.cs" />
     <Compile Include="StepLexerResources.cs" />
     <Compile Include="Terminal.cs" />
     <Compile Include="TerminalMatch.cs" />
     <Compile Include="Token.cs" />
+    <Compile Include="TokensFoundEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="FodyWeavers.xml" />
