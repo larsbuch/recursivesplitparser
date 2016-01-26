@@ -1,4 +1,5 @@
 ﻿using NullGuard;
+using RecursiveGrammar;
 using RecursiveSplitParser;
 using System;
 using System.Collections.Generic;
@@ -21,7 +22,7 @@ namespace StepLexer
     public class StepLexer: IStepLexer
     {
         private ObservableCollection<Terminal> _terminals;
-        private ObservableCollection<string> _sourceLines;
+        private ReactiveCollection<string> _sourceLines;
         private StepLexerOptions _stepLexerOptions;
         private Dictionary<int, LexerPath> _lexerPathMap;
         protected static Regex _indentRegex;
@@ -38,7 +39,7 @@ namespace StepLexer
             }
         }
 
-        public StepLexer(ObservableCollection<Terminal> terminals, ObservableCollection<string> sourceLines, StepLexerOptions stepLexerOptions)
+        public StepLexer(RecursiveGrammarContainer recursiveGrammarContainer, ObservableCollection<string> sourceLines, StepLexerOptions stepLexerOptions)
         {
             _terminals = terminals;
             _terminals.CollectionChanged += ResetLexerFromCollection;
