@@ -7,7 +7,7 @@ using Xunit;
 using RecursiveSplitParser;
 using System.Collections.ObjectModel;
 
-namespace StepLexer.UnitTests
+namespace Lexer.UnitTests
 {
     public class StepLexer_UnitTests
     {

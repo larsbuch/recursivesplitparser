@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StepLexer.UnitTests
+namespace Lexer.UnitTests
 {
     public class StepLexerTestConvensionsAttribute: AutoDataAttribute
     {

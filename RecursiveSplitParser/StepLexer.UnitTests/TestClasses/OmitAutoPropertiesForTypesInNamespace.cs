@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StepLexer.UnitTests
+namespace Lexer.UnitTests
 {
     public class OmitPropertyForTypeInNamespace : ISpecimenBuilder
     {

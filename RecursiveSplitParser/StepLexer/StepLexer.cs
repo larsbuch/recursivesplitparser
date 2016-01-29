@@ -1,5 +1,5 @@
 ﻿using NullGuard;
-using RecursiveGrammar;
+using Grammar;
 using RecursiveSplitParser;
 using System;
 using System.Collections.Generic;
@@ -9,20 +9,21 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Reactive.Subjects;
+using System.Reactive.Linq;
 
-namespace StepLexer
+namespace Lexer
 {
     /**
      * Responsible for tokenizing the input. Input is tokenized regex match done by NextToken() function. Using a stepwize 
      * lexer makes it possible to redefine terminals on the run making parsing Tex possible.
      * 
-     * TODOs terminal replacement
-     * 
      */
-    public class StepLexer: IStepLexer
+    public class StepLexer: ILexer, IDisposable
     {
-        private ObservableCollection<Terminal> _terminals;
-        private ReactiveCollection<string> _sourceLines;
+        private ObservableCollection<string> _sourceLines;
+        private IGrammarContainer _grammarContainer;
+        private IParser _parser;
         private StepLexerOptions _stepLexerOptions;
         private Dictionary<int, LexerPath> _lexerPathMap;
         protected static Regex _indentRegex;
@@ -39,36 +40,112 @@ namespace StepLexer
             }
         }
 
-        public StepLexer(RecursiveGrammarContainer recursiveGrammarContainer, ObservableCollection<string> sourceLines, StepLexerOptions stepLexerOptions)
+        public StepLexer(IParser parser, IGrammarContainer grammarContainer, ObservableCollection<string> sourceLines, StepLexerOptions stepLexerOptions)
         {
-            _terminals = terminals;
-            _terminals.CollectionChanged += ResetLexerFromCollection;
+            _parser = parser;
+            _grammarContainer = grammarContainer;
             _sourceLines = sourceLines;
             _sourceLines.CollectionChanged += ResetLexerFromCollection;
             _stepLexerOptions = stepLexerOptions;
-            _stepLexerOptions.OptionsChanged += ResetLexer;
+            OptionsChangedSubscriptionRegister();
         }
 
-        protected void ResetLexerFromCollection(object sender, NotifyCollectionChangedEventArgs e)
+        public void Dispose()
         {
-            ResetLexer();
+            OptionsChangedSubscriptionDispose();
+            CheckNextTokenSubscriptionDispose();
         }
 
-        public void ResetLexer(object sender, EventArgs e)
+    #region Events
+
+    #region Recieve Event CheckNextToken
+
+    private IDisposable _checkNextTokenSubstription;
+
+        private void CheckNextTokenSubscriptionRegister()
         {
-            ResetLexer();
+            _checkNextTokenSubstription = _parser.CheckNextToken.Subscribe(OnCheckNextToken);
         }
 
-        public event EventHandler<TokensFoundEventArgs> TokensFound;
-
-        protected virtual void OnTokenFound(TokensFoundEventArgs e)
+        /* remember to add to Dispose subscription */
+        private void CheckNextTokenSubscriptionDispose()
         {
-            EventHandler<TokensFoundEventArgs> handler = TokensFound;
-            if(handler != null)
+            _checkNextTokenSubstription.Dispose();
+        }
+
+        private void OnCheckNextToken(ICheckNextTokenEventArgs args)
+        {
+            List<Token> nextTokens;
+            if (args.LexerPathId == Constants.LexerPath_ALLPATHS)
             {
-                handler(this, e);
+                nextTokens = NextTokens();
+            }
+            else
+            {
+                nextTokens = NextTokens(e.LexerPathId);
+            }
+
+            SendNextTokens(nextTokens);
+        }
+
+        #endregion
+
+        #region Recieve Event OptionsChanged
+
+        private IDisposable _optionsChangedSubstription;
+
+        private void OptionsChangedSubscriptionRegister()
+        {
+            _optionsChangedSubstription = _stepLexerOptions.OptionsChanged.Subscribe(OnOptionsChanged);
+        }
+
+        /* remember to add to Dispose subscription */
+        private void OptionsChangedSubscriptionDispose()
+        {
+            _optionsChangedSubstription.Dispose();
+        }
+
+        private void OnOptionsChanged(StepLexerOptions stepLexerOptions)
+        {
+            Reset();
+        }
+
+        #endregion
+
+        #region Send Event NextToken
+
+        private Subject<List<Token>> _nextToken = new Subject<List<Token>>();
+
+        public IObservable<List<Token>> NextToken
+        {
+            get
+            {
+                return _nextToken.AsObservable();
             }
         }
+
+        public void AllTokensFound()
+        {
+            _nextToken.OnCompleted();
+        }
+
+        public void SendNextTokens(List<Token> tokens)
+        {
+            try
+            {
+                // If checks need to be made
+
+                _nextToken.OnNext(tokens);
+            }
+            catch (Exception exception)
+            {
+                _nextToken.OnError(exception);
+            }
+        }
+
+        #endregion
+
+        #endregion
 
         protected Dictionary<int, LexerPath> LexerPathMap
         {
@@ -98,44 +175,11 @@ namespace StepLexer
             ConfigureNewLexerPath(LexerPath.StartLexerPath);
         }
 
-        protected void ResetLexer()
+        protected void Reset()
         {
             LexerPathMap.Clear();
             CurrentLexerPathId = LexerPath.NOTSET;
             NewStartLexerPath();
-        }
-
-        public void CheckNextToken(object sender, CheckNextTokenEventArgs e)
-        {
-            List<Token> nextTokens;
-            if (e.LexerPathId == CheckNextTokenEventArgs.ALLPATHS)
-            {
-                nextTokens = NextTokens();
-            }
-            else
-            {
-                nextTokens = NextTokens(e.LexerPathId);
-            }
-            //TokensFoundEventArgs eventArgs = new TokensFoundEventArgs();
-            //eventArgs.PreviousToken = CurrentToken;
-            //Token[] tokens = NextTokens();
-            //switch (tokens.Length)
-            //{
-            //    case 0:
-            //        CurrentToken = new Token(Token.NULL, string.Empty, -1, 0);
-            //        eventArgs.IdentifiedTokens = CurrentToken;
-            //        break;
-            //    case 1:
-            //        CurrentToken = tokens[0];
-            //        eventArgs.IdentifiedTokens = tokens;
-            //        break;
-            //    default:
-            //        CurrentToken = tokens[0];
-            //        eventArgs.IdentifiedTokens = tokens;
-            //        break;
-            //}
-            //eventArgs.IdentifiedTokens = tokens;
-            //OnTokenFound(eventArgs);
         }
 
         protected List<Token> NextTokens(int lexerPathId)
@@ -231,7 +275,7 @@ namespace StepLexer
                 List<TerminalMatch> terminalMatches = new List<TerminalMatch>();
 
                 // TODO Redo to make it more efficient than match all terminals
-                foreach (Terminal terminal in _terminals)
+                foreach (Terminal terminal in lexerPath.Terminals)
                 {
                     Match singleMatch = terminal.Match(_sourceLines[lexerPath.ActiveLineNumber].Substring(lexerPath.ActiveCharacterNumber));
                     if (singleMatch.Success)

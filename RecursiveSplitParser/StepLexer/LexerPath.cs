@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Grammar;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StepLexer
+namespace Lexer
 {
     public class LexerPath
     {
@@ -16,22 +17,24 @@ namespace StepLexer
         internal int ActiveCharacterNumber { get; set; }
         internal int ActiveIndentNumber { get; set; }
         internal Token CurrentToken { get; set; }
+        internal RecursiveGrammar ActiveGrammar { get; set; }
         public static LexerPath StartLexerPath
         {
             get
             {
-                return new LexerPath(LexerPath.NOTSET, Token.LINEPOSITION_START, Token.CHARPOSITION_START, Token.INDENT_START, Token.NewNullToken);
+                return new LexerPath(LexerPath.NOTSET, GrammarContainer.BaseGrammar, Token.LINEPOSITION_START, Token.CHARPOSITION_START, Token.INDENT_START, Token.NewNullToken);
             }
         }
 
-        internal LexerPath(int parentLexerPathID, int activeLineNumber, int activeCharacterNumber, int activeIndentNumber, Token currentToken):this(LexerPath.NOTSET, parentLexerPathID, activeLineNumber, activeCharacterNumber, activeIndentNumber, currentToken)
+        internal LexerPath(int parentLexerPathID, RecursiveGrammar activeGrammar, int activeLineNumber, int activeCharacterNumber, int activeIndentNumber, Token currentToken):this(LexerPath.NOTSET, parentLexerPathID, activeGrammar, activeLineNumber, activeCharacterNumber, activeIndentNumber, currentToken)
         {
         }
 
-        internal LexerPath(int lexerPathID, int parentLexerPathID, int activeLineNumber, int activeCharacterNumber, int activeIndentNumber, Token currentToken)
+        internal LexerPath(int lexerPathID, int parentLexerPathID, RecursiveGrammar activeGrammar, int activeLineNumber, int activeCharacterNumber, int activeIndentNumber, Token currentToken)
         {
             LexerPathID = lexerPathID;
             ParentLexerPathID = parentLexerPathID;
+            ActiveGrammar = activeGrammar;
             ActiveLineNumber = activeLineNumber;
             ActiveCharacterNumber = activeCharacterNumber;
             ActiveIndentNumber = activeIndentNumber;
@@ -40,7 +43,7 @@ namespace StepLexer
 
         internal LexerPath Clone()
         {
-            return new LexerPath(LexerPathID, ActiveLineNumber, ActiveCharacterNumber, ActiveIndentNumber, CurrentToken.Clone());
+            return new LexerPath(LexerPathID, ActiveGrammar , ActiveLineNumber, ActiveCharacterNumber, ActiveIndentNumber, CurrentToken.Clone());
         }
     }
 }

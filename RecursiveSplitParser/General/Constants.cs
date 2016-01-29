@@ -4,12 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Grammar
+namespace RecursiveSplitParser
 {
-    public enum TokenSplitterType
+    public static class Constants
     {
-        None,
-        Space,
-        Regex
+        public const int LexerPath_ALLPATHS = 0;
     }
 }

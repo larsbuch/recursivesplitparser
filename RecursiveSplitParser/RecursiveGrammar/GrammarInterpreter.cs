@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecursiveGrammar
+namespace Grammar
 {
     public class GrammarInterpreter
     {
@@ -40,7 +40,7 @@ namespace RecursiveGrammar
             _grammarList = new GrammarList();
         }
 
-        public void addParentInterpretor(GrammarInterpreter grammarInterpreter)
+        public void addParentInterpreter(GrammarInterpreter grammarInterpreter)
         {
             _parent = grammarInterpreter;
         }
@@ -60,7 +60,7 @@ namespace RecursiveGrammar
 
         public string RegexTokenSplitter { get; set; }
 
-        internal Grammar GetGrammar()
+        internal RecursiveGrammar GetGrammar()
         {
             throw new NotImplementedException();
         }

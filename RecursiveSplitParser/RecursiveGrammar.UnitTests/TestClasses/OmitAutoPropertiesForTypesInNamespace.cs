@@ -7,7 +7,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecursiveGrammar.UnitTests
+namespace Grammar.UnitTests
 {
     public class OmitPropertyForTypeInNamespace : ISpecimenBuilder
     {

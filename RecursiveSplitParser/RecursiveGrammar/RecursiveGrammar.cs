@@ -4,9 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecursiveGrammar
+namespace Grammar
 {
-    public class RecursiveGrammar
+    public class RecursiveGrammar: IGrammar
     {
+        private List<Production> _grammar;
+        private List<Terminal> _terminals;
+
+        public RecursiveGrammar()
+        {
+            _grammar = new List<Production>();
+            _terminals = new List<Terminal>();
+        }
+
+        public List<Terminal> GetTerminals()
+        {
+            return _terminals;
+        }
     }
 }

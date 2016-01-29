@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecursiveGrammar
+namespace RecursiveSplitParser
 {
-    public class RecursiveGrammarContainer
+    public interface IGrammar
     {
     }
 }

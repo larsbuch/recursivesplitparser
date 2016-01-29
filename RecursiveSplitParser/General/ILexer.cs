@@ -4,10 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace StepLexer
+namespace RecursiveSplitParser
 {
-    public class TokensFoundEventArgs : EventArgs
+    public interface ILexer
     {
-        public Token[] IdentifiedTokens { get; set; }
     }
 }

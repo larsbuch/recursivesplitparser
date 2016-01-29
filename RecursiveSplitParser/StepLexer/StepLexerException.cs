@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.Serialization;
 
-namespace StepLexer
+namespace Lexer
 {
     [Serializable]
     internal class StepLexerException : Exception

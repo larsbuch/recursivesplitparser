@@ -1,22 +1,41 @@
 ﻿using System;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 
-namespace StepLexer
+namespace Lexer
 {
     public class StepLexerOptions
     {
         private bool _returnIndentToken = false;
         private int _indentSpacePerTab = 4;
 
-        public event EventHandler OptionsChanged;
+        #region Send Event OptionsChanged
 
-        protected virtual void OnOptionsChanged(EventArgs e)
+        private Subject<StepLexerOptions> _optionsChanged = new Subject<StepLexerOptions>();
+
+        public IObservable<StepLexerOptions> OptionsChanged
         {
-            EventHandler handler = OptionsChanged;
-            if(handler != null)
+            get
             {
-                handler(this, e);
+                return _optionsChanged.AsObservable();
             }
         }
+
+        public void NotifyOptionsChanged(StepLexerOptions stepLexerOptions)
+        {
+            try
+            {
+                // If checks need to be made
+
+                _optionsChanged.OnNext(stepLexerOptions);
+            }
+            catch(Exception exception)
+            {
+                _optionsChanged.OnError(exception);
+            }
+        }
+
+        #endregion
 
         public bool ReturnIndentToken
         {
@@ -27,7 +46,7 @@ namespace StepLexer
             set
             {
                 _returnIndentToken = value;
-                OnOptionsChanged(EventArgs.Empty);
+                NotifyOptionsChanged(this);
             }
         }
 
@@ -40,7 +59,7 @@ namespace StepLexer
             set
             {
                 _indentSpacePerTab = value;
-                OnOptionsChanged(EventArgs.Empty);
+                NotifyOptionsChanged(this);
             }
         }
     }

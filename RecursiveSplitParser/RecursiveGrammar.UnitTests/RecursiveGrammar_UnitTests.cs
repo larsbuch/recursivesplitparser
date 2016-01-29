@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
-namespace RecursiveGrammar.UnitTests
+namespace Grammar.UnitTests
 {
     public class RecursiveGrammar_UnitTests
     {

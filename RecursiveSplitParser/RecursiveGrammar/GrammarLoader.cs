@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecursiveGrammar
+namespace Grammar
 {
     public class GrammarLoader
     {
@@ -182,7 +182,7 @@ namespace RecursiveGrammar
             string grammarName = textLine.TrimStart(GRAMMARSTART.ToCharArray()).Trim();
             if (!grammarName.Equals(BASEGRAMMARNAME))
             {
-                grammarInterpreter.addParentInterpretor(loadGrammarFile(grammarName));
+                grammarInterpreter.addParentInterpreter(loadGrammarFile(grammarName));
             }
         }
 
