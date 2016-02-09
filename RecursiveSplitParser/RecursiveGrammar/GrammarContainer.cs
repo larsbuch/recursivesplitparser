@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RecursiveSplitParser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -20,6 +21,16 @@ namespace Grammar
                 }
                 return _baseGrammar;
             }
+        }
+
+        public IGrammar GetGrammar(string grammarName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public IGrammar GetBaseGrammar()
+        {
+            return BaseGrammar;
         }
     }
 }

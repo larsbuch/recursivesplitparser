@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RecursiveSplitParser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,7 +24,7 @@ namespace Grammar
             _activeProductionPart = _firstProductionPart;
         }
 
-        public bool MatchToken(Token token)
+        public bool MatchToken(IToken token)
         {
             // if match move forward
             throw new NotImplementedException();

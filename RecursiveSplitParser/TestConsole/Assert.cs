@@ -4,9 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace RecursiveSplitParser
+namespace TestConsole
 {
-    public interface IGrammar
+    public class Assert
     {
+        internal static void Equal(object expected, object actual)
+        {
+        }
     }
 }

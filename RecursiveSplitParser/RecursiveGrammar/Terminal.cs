@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RecursiveSplitParser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Grammar
 {
-    public class Terminal
+    public class Terminal :ITerminal
     {
         public string TerminalName { get; private set; }
         public string TerminalMatch { get; private set; }

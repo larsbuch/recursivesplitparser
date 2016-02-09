@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace RecursiveSplitParser
 {
-    public static class Constants
+    public interface IGrammar
     {
-        public const int LexerPath_ALLPATHS = 0;
+        IEnumerable<ITerminal> Terminals { get; }
     }
 }

@@ -10,7 +10,7 @@ namespace RecursiveSplitParserConsole
     {
         static void Main(string[] args)
         {
-            if(args == null || args.Length != 3)
+            if (args == null || args.Length != 3)
             {
                 WriteLine(string.Format("Use: {0} {1} {2}", "SplitParserCmd", "GrammarFileAndPath", "ParseFileAndPath"));
             }

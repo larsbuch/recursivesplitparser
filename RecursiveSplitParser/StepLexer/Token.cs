@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RecursiveSplitParser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Lexer
 {
-    public class Token
+    public class Token:IToken
     {
         public const string NULL = "NULL";
         public const string BOF = "BOF";

@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 
 namespace RecursiveSplitParser
 {
-    public interface IGrammarContainer
+    public class GrammarChangeIdentifiedEventArgs
     {
+        public string GrammarName { get; set; }
+        public int LexerPathID { get; set; }
     }
 }

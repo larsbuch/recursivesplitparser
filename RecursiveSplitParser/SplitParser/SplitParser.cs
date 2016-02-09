@@ -1,23 +1,28 @@
 ﻿using Grammar;
+using ReactiveUI;
 using RecursiveSplitParser;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SplitParser
 {
-    public class SplitParser:IParser
+    public class SplitParser:AbstractParser
     {
-        public GrammarInterpreter Grammar { get; private set; }
-
-        public void parseGrammarFile(string fileName)
+        private ReactiveList<SourceCodeLine> _sourceCodeLines;
+        public SplitParser()
         {
-            GrammarLoader grammarLoader = new GrammarLoader();
-            Grammar = grammarLoader.loadGrammarFile(fileName);
-            Grammar.parseGrammar();
+            _sourceCodeLines = new ReactiveList<SourceCodeLine>();
         }
+
+
+        #region Properties
+
+        public GrammarInterpreter Grammar { get; private set; }
 
         public bool HasGrammarErrors
         {
@@ -35,28 +40,46 @@ namespace SplitParser
             }
         }
 
-        public SourceCodeList SourceCode { get; private set; }
+        public ReactiveList<SourceCodeLine> SourceCodeLines
+        {
+            get
+            {
+                return _sourceCodeLines;
+            }
+        }
+
+        #endregion
+
+
+        public void parseGrammarFile(string fileName)
+        {
+            GrammarLoader grammarLoader = new GrammarLoader();
+            Grammar = grammarLoader.loadGrammarFile(fileName);
+            Grammar.parseGrammar();
+        }
+
 
         public void parseCodeText(List<string> codeText)
         {
             SourceCodeLoader codeLoader = new SourceCodeLoader();
-            SourceCode = codeLoader.loadSourceCode(codeText);
+            codeLoader.loadSourceCode(SourceCodeLines, codeText);
             parseCode();
         }
 
-        public void parseCodeFile(string fileName)
+        public void parseCodeFile(string filePath, string fileName)
         {
             SourceCodeLoader codeLoader = new SourceCodeLoader();
-            SourceCode = codeLoader.loadCodeFile(fileName);
+            codeLoader.loadCodeFile(SourceCodeLines, filePath, fileName);
             parseCode();
         }
 
         private void parseCode()
         {
-            if (SourceCode != null)
-            {
-                SourceCode.parseCode(Grammar);
-            }
+            throw new NotImplementedException();
+            //if (SourceCodeLines != null)
+            //{
+            //    SourceCodeLines.parseCode(Grammar);
+            //}
         }
 
         public bool HasCodeErrors
@@ -71,13 +94,15 @@ namespace SplitParser
         {
             get
             {
-                return SourceCode.SourceCodeErrors;
+                throw new NotImplementedException();
+                //return SourceCodeLines.SourceCodeErrors;
             }
         }
 
         public string writeCode()
         {
-            return SourceCode.writeCode();
+            throw new NotImplementedException();
+            //return SourceCodeLines.writeCode();
         }
 
         public string writeGrammar()
@@ -85,6 +110,41 @@ namespace SplitParser
             StringBuilder stringBuilder = new StringBuilder();
             Grammar.writeGrammar(stringBuilder);
             return stringBuilder.ToString();
+        }
+
+        protected override void OnCustomLexerEvent(LexerCustomEventArgs lexerCustomEventArgs)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnIgnoreTerminal(IgnoreTerminalEventArgs ignoreTerminalEventArgs)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnNextToken(List<IToken> tokenList)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnCustomLexerEventError(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnIgnoreTerminalError(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnNextTokenError(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnNextTokenCompeted()
+        {
+            throw new NotImplementedException();
         }
     }
 }

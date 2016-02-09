@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RecursiveSplitParser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,9 +18,12 @@ namespace Grammar
             _terminals = new List<Terminal>();
         }
 
-        public List<Terminal> GetTerminals()
+        public IEnumerable<ITerminal> Terminals
         {
-            return _terminals;
+            get
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

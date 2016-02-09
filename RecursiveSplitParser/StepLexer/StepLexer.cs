@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Reactive.Subjects;
 using System.Reactive.Linq;
+using ReactiveUI;
 
 namespace Lexer
 {
@@ -19,12 +20,8 @@ namespace Lexer
      * lexer makes it possible to redefine terminals on the run making parsing Tex possible.
      * 
      */
-    public class StepLexer: ILexer, IDisposable
+    public class StepLexer: AbstractLexer
     {
-        private ObservableCollection<string> _sourceLines;
-        private IGrammarContainer _grammarContainer;
-        private IParser _parser;
-        private StepLexerOptions _stepLexerOptions;
         private Dictionary<int, LexerPath> _lexerPathMap;
         protected static Regex _indentRegex;
 
@@ -40,110 +37,92 @@ namespace Lexer
             }
         }
 
-        public StepLexer(IParser parser, IGrammarContainer grammarContainer, ObservableCollection<string> sourceLines, StepLexerOptions stepLexerOptions)
+        public StepLexer(IParser parser, IGrammarContainer grammarContainer, ReactiveList<SourceCodeLine> sourceLines, ILexerOptions lexerOptions):base(parser, grammarContainer, sourceLines, lexerOptions)
         {
-            _parser = parser;
-            _grammarContainer = grammarContainer;
-            _sourceLines = sourceLines;
-            _sourceLines.CollectionChanged += ResetLexerFromCollection;
-            _stepLexerOptions = stepLexerOptions;
-            OptionsChangedSubscriptionRegister();
         }
 
-        public void Dispose()
+
+        #region Properties
+
+        #endregion
+
+        #region Events
+
+        protected override void OnOptionsChanged(ILexerOptions lexerOptions)
         {
-            OptionsChangedSubscriptionDispose();
-            CheckNextTokenSubscriptionDispose();
+            Reset();
+        }
+        private void NotifySplitLexerPath(LexerPath newLexerPath)
+        {
+            LexerCustomEventArgs lexerCustomEventArgs = new LexerCustomEventArgs();
+            lexerCustomEventArgs.EventName = StepLexerResources.LexerCustomEventArgs_SplitLexerPath;
+            lexerCustomEventArgs.EventValue = newLexerPath.LexerPathID.ToString();
+            OnCustomLexerEvent(lexerCustomEventArgs);
         }
 
-    #region Events
-
-    #region Recieve Event CheckNextToken
-
-    private IDisposable _checkNextTokenSubstription;
-
-        private void CheckNextTokenSubscriptionRegister()
+        private void NotifyCollapsingLexerPath(LexerPath newLexerPath)
         {
-            _checkNextTokenSubstription = _parser.CheckNextToken.Subscribe(OnCheckNextToken);
+            LexerCustomEventArgs lexerCustomEventArgs = new LexerCustomEventArgs();
+            lexerCustomEventArgs.EventName = StepLexerResources.LexerCustomEventArgs_CollapseLexerPath;
+            lexerCustomEventArgs.EventValue = newLexerPath.LexerPathID.ToString();
+            OnCustomLexerEvent(lexerCustomEventArgs);
         }
 
-        /* remember to add to Dispose subscription */
-        private void CheckNextTokenSubscriptionDispose()
+
+
+        private void NotifyIgnoreTerminal(IToken token)
         {
-            _checkNextTokenSubstription.Dispose();
+            IgnoreTerminalEventArgs ignoreTerminal = new IgnoreTerminalEventArgs();
+            ignoreTerminal.Token = token;
+            OnIgnoreTerminal(ignoreTerminal);
         }
 
-        private void OnCheckNextToken(ICheckNextTokenEventArgs args)
+        protected override void OnGrammarChangeIdentified(GrammarChangeIdentifiedEventArgs args)
         {
-            List<Token> nextTokens;
-            if (args.LexerPathId == Constants.LexerPath_ALLPATHS)
+            /* Change grammar in lexerpath */
+            try
+            {
+                LexerPath lexerPath;
+                if (_lexerPathMap.TryGetValue(args.LexerPathID, out lexerPath))
+                {
+                    lexerPath.ActiveGrammar = _grammarContainer.GetGrammar(args.GrammarName);
+                }
+            }
+            catch (Exception e)
+            {
+                /* TODO Do something intelligent with exception */
+            }
+        }
+
+        protected override void OnCheckNextToken(CheckNextTokenEventArgs args)
+        {
+            /* TODO Buffer changes to options, lexerPath */
+            List<IToken> nextTokens;
+            if (args.LexerPathId == StepLexerResources.LexerPathId_ALLPATHS)
             {
                 nextTokens = NextTokens();
             }
             else
             {
-                nextTokens = NextTokens(e.LexerPathId);
+                nextTokens = NextTokens(args.LexerPathId);
             }
-
-            SendNextTokens(nextTokens);
+            if (nextTokens.Count == 0)
+            {
+                AllTokensFound();
+            }
+            else
+            {
+                SendNextTokens(nextTokens);
+            }
+            /* TODO Allow buffers to send messages out */
         }
 
-        #endregion
-
-        #region Recieve Event OptionsChanged
-
-        private IDisposable _optionsChangedSubstription;
-
-        private void OptionsChangedSubscriptionRegister()
+        protected override void OnSourceLinesChanged(NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
         {
-            _optionsChangedSubstription = _stepLexerOptions.OptionsChanged.Subscribe(OnOptionsChanged);
-        }
-
-        /* remember to add to Dispose subscription */
-        private void OptionsChangedSubscriptionDispose()
-        {
-            _optionsChangedSubstription.Dispose();
-        }
-
-        private void OnOptionsChanged(StepLexerOptions stepLexerOptions)
-        {
+            /* Always reset parsing when source lines change */
             Reset();
         }
 
-        #endregion
-
-        #region Send Event NextToken
-
-        private Subject<List<Token>> _nextToken = new Subject<List<Token>>();
-
-        public IObservable<List<Token>> NextToken
-        {
-            get
-            {
-                return _nextToken.AsObservable();
-            }
-        }
-
-        public void AllTokensFound()
-        {
-            _nextToken.OnCompleted();
-        }
-
-        public void SendNextTokens(List<Token> tokens)
-        {
-            try
-            {
-                // If checks need to be made
-
-                _nextToken.OnNext(tokens);
-            }
-            catch (Exception exception)
-            {
-                _nextToken.OnError(exception);
-            }
-        }
-
-        #endregion
 
         #endregion
 
@@ -172,7 +151,7 @@ namespace Lexer
 
         protected void NewStartLexerPath()
         {
-            ConfigureNewLexerPath(LexerPath.StartLexerPath);
+            ConfigureNewLexerPath(LexerPath.StartLexerPath(_grammarContainer.GetBaseGrammar()));
         }
 
         protected void Reset()
@@ -182,9 +161,9 @@ namespace Lexer
             NewStartLexerPath();
         }
 
-        protected List<Token> NextTokens(int lexerPathId)
+        protected List<IToken> NextTokens(int lexerPathId)
         {
-            List<Token> tokenList = new List<Token>();
+            List<IToken> tokenList = new List<IToken>();
             LexerPath lexerPath;
             if(LexerPathMap.TryGetValue(lexerPathId, out lexerPath))
             {
@@ -197,9 +176,9 @@ namespace Lexer
             return tokenList;
         }
 
-        protected List<Token> NextTokens()
+        protected List<IToken> NextTokens()
         {
-            List<Token> tokenList = new List<Token>();
+            List<IToken> tokenList = new List<IToken>();
             foreach (LexerPath lexerPath in LexerPathMap.Values)
             {
                 NextTokens(lexerPath, tokenList);
@@ -207,7 +186,7 @@ namespace Lexer
             return tokenList;
         }
 
-        protected void NextTokens(LexerPath lexerPath, List<Token> tokenList)
+        protected void NextTokens(LexerPath lexerPath, List<IToken> tokenList)
         {
             if (lexerPath.CurrentToken.Terminal.Equals(Token.NULL))
             {
@@ -251,7 +230,7 @@ namespace Lexer
                 tokenList.Add(lexerPath.CurrentToken);
             }
             // check indent level change after EOL
-            else if (_stepLexerOptions.ReturnIndentToken)
+            else if (_lexerOptions.ReturnIndentToken)
             {
                 int indentCount = CountIndent(lexerPath, _sourceLines[lexerPath.ActiveLineNumber]);
                 if (indentCount != lexerPath.ActiveIndentNumber)
@@ -290,6 +269,7 @@ namespace Lexer
                     {
                         /* remove lexer path as it was earlier dublicated */
                         LexerPathMap.Remove(lexerPath.LexerPathID);
+                        NotifyCollapsingLexerPath(lexerPath);
                     }
                     else
                     {
@@ -310,10 +290,15 @@ namespace Lexer
                         if(terminalMatches.Count > 1 && matchCounter > 1)
                         {
                             newLexerPath = ConfigureNewLexerPath(newLexerPath.Clone());
+                            NotifySplitLexerPath(newLexerPath);
                         }
                         if (!terminalMatch.IgnoreTerminal)
                         {
                             newLexerPath.CurrentToken = new Token(newLexerPath.LexerPathID, terminalMatch.Terminal.TerminalName, terminalMatch.Capture, newLexerPath.ActiveLineNumber, newLexerPath.ActiveCharacterNumber);
+                        }
+                        else
+                        {
+                            NotifyIgnoreTerminal(new Token(newLexerPath.LexerPathID, terminalMatch.Terminal.TerminalName, terminalMatch.Capture, newLexerPath.ActiveLineNumber, newLexerPath.ActiveCharacterNumber));
                         }
                         newLexerPath.ActiveCharacterNumber += terminalMatch.Capture.Length;
                         if (terminalMatch.IgnoreTerminal)
@@ -329,15 +314,15 @@ namespace Lexer
             }
         }
 
-        private int CountIndent(LexerPath lexerPath, string sourceLine)
+        private int CountIndent(LexerPath lexerPath, ISourceCodeLine sourceCodeLine)
         {
 
-            Match match = IndentRegex.Match(sourceLine);
+            Match match = IndentRegex.Match(sourceCodeLine.ToString());
             if(match.Success)
             {
                 Group group = match.Groups[1];
                 string indentString = group.Value;
-                int indentCount = indentString.Count(x => x == '\t') * _stepLexerOptions.IndentSpacePerTab;
+                int indentCount = indentString.Count(x => x == '\t') * _lexerOptions.IndentSpacePerTab;
                 indentCount += indentString.Count(x => x == ' ');
 
                 return indentCount;
@@ -346,6 +331,26 @@ namespace Lexer
             {
                 return lexerPath.ActiveIndentNumber;
             }
+        }
+
+        protected override void OnSourceLinesChangedError(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnCheckNextTokenError(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnGrammarChangeIdentifiedError(Exception exception)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void OnOptionsChangedError(Exception exception)
+        {
+            throw new NotImplementedException();
         }
     }
 }

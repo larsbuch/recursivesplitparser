@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RecursiveSplitParser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,10 +16,10 @@ namespace Lexer
                 return Terminal.IgnoreTerminal;
             }
         }
-        public Terminal Terminal { get; private set; }
+        public ITerminal Terminal { get; private set; }
         public string Capture { get; private set; }
 
-        public TerminalMatch(Terminal terminal, string capture)
+        public TerminalMatch(ITerminal terminal, string capture)
         {
             Terminal = terminal;
             Capture = capture;

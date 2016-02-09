@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 
 namespace RecursiveSplitParser
 {
-    public interface ICheckNextTokenEventArgs
+    public interface IToken
     {
+        string Match { get; }
+        string Terminal { get; }
+        int LinePosition { get; }
+        int CharPosition { get; }
         int LexerPathId { get; }
     }
 }

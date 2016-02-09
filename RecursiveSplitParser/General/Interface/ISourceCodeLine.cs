@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace RecursiveSplitParser
 {
-    public interface ILexer
+    public interface ISourceCodeLine
     {
+        int Length { get; }
+        string Substring(int startIndex);
+        string Substring(int startIndex, int length);
     }
 }
